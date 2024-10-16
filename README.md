@@ -63,11 +63,12 @@ Fivem Advanced Vehicle System. Including Mileages , Degrations ,Multiple Engine 
 
 # Dependency
 - ox_lib v3
-- ox_inventory
+- ox_inventory (Optional)
+- qs_inventory (Optional)
 - (ESX or qbcore)
 
 # Inventory Support
-- right now only ox_inventory/qb-inventory is supported
+- right now only ox_inventory/qb-inventory/qs-inventory is supported
 - Inventory porting is easy look for inventory.lua
 
 # WIP TASKs

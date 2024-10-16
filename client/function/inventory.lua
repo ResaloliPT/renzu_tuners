@@ -1,19 +1,36 @@
 GetInventoryItems = function(items)
     if GetResourceState('ox_inventory') == 'started' then
         return exports.ox_inventory:Search('slots', items)
+    elseif GetResourceState('qs-inventory') == 'started' then
+        local data = {}
+        local itemdata = {} --//TODO: RP Validate this logic
+        for _, item in pairs(exports['qs-inventory']:getUserInventory()) do
+            for k, v in pairs(items) do
+                if v == item.name then
+                    item.count = item.amount
+                    if not itemdata[item.name] then
+                        itemdata[item.name] = item
+                    else
+                        itemdata[item.name].count += item.amount
+                    end
+                    table.insert(data, itemdata)
+                end
+            end
+        end
+        return data
     elseif GetResourceState('qb-core') == 'started' then
         local data = {}
         local itemdata = {}
         for _, item in pairs(PlayerData.items) do
-            for k,v in pairs(items) do
+            for k, v in pairs(items) do
                 if v == item.name then
                     item.count = item.amount
-                    if not itemdata[item.name] then 
-                        itemdata[item.name] = item 
+                    if not itemdata[item.name] then
+                        itemdata[item.name] = item
                     else
                         itemdata[item.name].count += item.amount
                     end
-                    table.insert(data,itemdata)
+                    table.insert(data, itemdata)
                 end
             end
         end
@@ -22,14 +39,14 @@ GetInventoryItems = function(items)
         local data = {}
         local itemdata = {}
         for _, item in pairs(PlayerData.inventory) do
-            for k,v in pairs(items) do
+            for k, v in pairs(items) do
                 if v == item.name then
-                    if not itemdata[item.name] then 
-                        itemdata[item.name] = item 
+                    if not itemdata[item.name] then
+                        itemdata[item.name] = item
                     else
                         itemdata[item.name].count += item.count
                     end
-                    table.insert(data,itemdata)
+                    table.insert(data, itemdata)
                 end
             end
         end
@@ -41,13 +58,19 @@ end
 exports('useItem', function(data, slot)
     local closestvehicle = GetClosestVehicle(GetEntityCoords(cache.ped), 10.0)
     if DoesEntityExist(closestvehicle) then
-        exports.ox_inventory:useItem(data, function(data)
-            if data then
-				ItemFunction(closestvehicle,data)
+        if GetResourceState('ox_inventory') == 'started' then
+            exports.ox_inventory:useItem(data, function(data)
+                if data then
+                    ItemFunction(closestvehicle, data)
+                end
+            end)
+        elseif GetResourceState('qs-inventory') == 'started' then
+            if data then --//TODO: RP Validate this logic
+                ItemFunction(closestvehicle, data)
             end
-        end)
+        end
     else
-        lib.notify({type = 'error', description = 'There is no vehicle nearby'})
+        lib.notify({ type = 'error', description = 'There is no vehicle nearby' })
     end
 end)
 

@@ -22,28 +22,30 @@ end
 GetInventoryItems = function(src, method, items, metadata)
 	if GetResourceState('ox_inventory') == 'started' then
 		return exports.ox_inventory:Search(src, method, items, metadata)
+	elseif GetResourceState('qs-inventory') == 'started' then
+		return exports['qs-inventory']:GetInventory(src) --//TODO: RP Validate this logic
 	elseif QbCore then
 		local Player = GetPlayerFromId(src)
 		local data = {}
-        for _, item in pairs(Player?.PlayerData?.items or {}) do
+		for _, item in pairs(Player?.PlayerData?.items or {}) do
 			if items == item.name then
 				item.metadata = item.info
 				if item?.metadata?.quality then
 					item.metadata.durability = item.metadata.quality
 				end
-				table.insert(data,item)
+				table.insert(data, item)
 			end
-        end
-        return data
+		end
+		return data
 	elseif ESX then
 		local Player = GetPlayerFromId(src)
 		local data = {}
-        for _, item in pairs(Player?.inventory or {}) do
+		for _, item in pairs(Player?.inventory or {}) do
 			if items == item.name then
-				table.insert(data,item)
+				table.insert(data, item)
 			end
-        end
-        return data
+		end
+		return data
 	end
 end
 
@@ -52,19 +54,19 @@ GetMoney = function(src)
 		return exports.ox_inventory:Search(src, 'count', 'money')
 	elseif QbCore then
 		local Player = GetPlayerFromId(src)
-        return Player.PlayerData.money['cash']
+		return Player.PlayerData.money['cash']
 	elseif ESX then
 		local Player = GetPlayerFromId(src)
 		return Player.getMoney()
 	end
 end
 
-RemoveMoney = function(src,amount)
+RemoveMoney = function(src, amount)
 	if GetResourceState('ox_inventory') == 'started' then
-		RemoveInventoryItem(src,'money',amount)
+		RemoveInventoryItem(src, 'money', amount)
 	elseif QbCore then
 		local Player = GetPlayerFromId(src)
-		Player.Functions.RemoveMoney('cash',tonumber(amount))
+		Player.Functions.RemoveMoney('cash', tonumber(amount))
 	elseif ESX then
 		local Player = GetPlayerFromId(src)
 		return Player.removeMoney(amount)
@@ -74,6 +76,8 @@ end
 RemoveInventoryItem = function(src, item, count, metadata, slot)
 	if GetResourceState('ox_inventory') == 'started' then
 		return exports.ox_inventory:RemoveItem(src, item, count, metadata, slot)
+	elseif GetResourceState('qs-inventory') == 'started' then
+		return exports['qs-inventory']:RemoveItem(src, item, count, slot, metadata)
 	elseif QbCore then
 		return exports['qb-inventory']:RemoveItem(src, item, count, slot, metadata)
 	elseif ESX then
@@ -85,6 +89,8 @@ end
 AddInventoryItem = function(src, item, count, metadata, slot)
 	if GetResourceState('ox_inventory') == 'started' then
 		return exports.ox_inventory:AddItem(src, item, count, metadata, slot)
+	elseif GetResourceState('qs-inventory') == 'started' then
+		exports['qs-inventory']:AddItem(src, item, count, slot, metadata)
 	elseif QbCore then
 		metadata.quality = metadata.durability
 		return exports['qb-inventory']:AddItem(src, item, count, slot, metadata)
@@ -94,9 +100,11 @@ AddInventoryItem = function(src, item, count, metadata, slot)
 	end
 end
 
-SetDurability = function(src,percent,slot,metadata,item)
+SetDurability = function(src, percent, slot, metadata, item)
 	if GetResourceState('ox_inventory') == 'started' then
 		return exports.ox_inventory:SetDurability(src, slot, percent)
+	elseif GetResourceState('qs-inventory') == 'started' then
+		return exports['qs-inventory']:SetItemMetadata(src, slot, metadata) --//TODO: RP Validate this logic
 	elseif QbCore then
 		local Player = GetPlayerFromId(src)
 		Player.PlayerData.items[slot].info.quality = percent
@@ -104,9 +112,13 @@ SetDurability = function(src,percent,slot,metadata,item)
 	end
 end
 
-RegisterStash = function(id,label,slots,size,perms,groups)
+RegisterStash = function(id, label, slots, size, perms, groups)
+	if GetResourceState('qs-inventory') == 'started' then
+		exports['qs-inventory']:RegisterStash(id, label, slots, size)
+	end
+
 	if GetResourceState('ox_inventory') ~= 'started' then return end
-	return exports.ox_inventory:RegisterStash(id,label,slots,size,perms,groups)
+	return exports.ox_inventory:RegisterStash(id, label, slots, size, perms, groups)
 end
 
 -- register ESX & QBcore Items if ox_inventory is missing
@@ -118,29 +130,28 @@ elseif QbCore then
 	RegisterUsableItem = QbCore.Functions.CreateUseableItem
 end
 
-if GetResourceState('ox_inventory') ~= 'started' then
+if GetResourceState('ox_inventory') ~= 'started' and GetResourceState('qs-inventory') ~= 'started' then
 	local register = function(source, item)
 		local src = source
 		local Player = GetPlayerFromId(src)
-		local itemdata = type(item) == 'table' and item or {name = item, label = item} -- support ancient framework
-		RemoveInventoryItem(src,itemdata.name,1,itemdata.metadata,itemdata.slot)
-		TriggerClientEvent("useItem", src,false,{name = itemdata.name, label = itemdata.label},true)
+		local itemdata = type(item) == 'table' and item or { name = item, label = item } -- support ancient framework
+		RemoveInventoryItem(src, itemdata.name, 1, itemdata.metadata, itemdata.slot)
+		TriggerClientEvent("useItem", src, false, { name = itemdata.name, label = itemdata.label }, true)
 	end
-	for k,v in pairs(config.engineparts) do
+	for k, v in pairs(config.engineparts) do
 		RegisterUsableItem(v.item, register)
 	end
-	for k,v in pairs(config.engineupgrades) do
+	for k, v in pairs(config.engineupgrades) do
 		RegisterUsableItem(v.item, register)
 	end
-	for k,v in pairs(config.tires) do
+	for k, v in pairs(config.tires) do
 		RegisterUsableItem(v.item, register)
 	end
-	for k,v in pairs(config.drivetrain) do
+	for k, v in pairs(config.drivetrain) do
 		RegisterUsableItem(v.item, register)
 	end
-	for k,v in pairs(config.extras) do
+	for k, v in pairs(config.extras) do
 		RegisterUsableItem(v.item, register)
 	end
 	RegisterUsableItem('repairparts', register)
-
 end

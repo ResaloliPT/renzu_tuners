@@ -1,6 +1,7 @@
-
 Targets = function()
-	local target = GetResourceState('ox_target') == 'started' and "ox_target" or GetResourceState('qb-target') == 'started' and "qb-target" or GetResourceState('qtarget') == 'started' and 'qtarget'
+	local target = GetResourceState('ox_target') == 'started' and "ox_target" or
+		GetResourceState('qb-target') == 'started' and "qb-target" or
+		GetResourceState('qtarget') == 'started' and 'qtarget'
 	if not target then return end
 	local options = {
 		{
@@ -21,7 +22,7 @@ Targets = function()
 						disable = {
 							car = true,
 						},
-					}) 
+					})
 					CheckVehicle()
 				end)
 			end
@@ -44,7 +45,7 @@ Targets = function()
 						disable = {
 							car = true,
 						},
-					}) 
+					})
 					CheckPerformance()
 				end)
 			end
@@ -67,7 +68,7 @@ Targets = function()
 						disable = {
 							car = true,
 						},
-					}) 
+					})
 					CheckWheels()
 				end)
 			end
@@ -78,7 +79,8 @@ Targets = function()
 			label = 'Upgrade Vehicle',
 			canInteract = function(entity, distance, coords, name, boneId)
 				if GetVehicleDoorLockStatus(entity) > 1 then return end
-				return type(coords) ~= 'table' and #(coords - GetEntityCoords(entity)) < 1.9 and HasAccess() or HasAccess()
+				return type(coords) ~= 'table' and #(coords - GetEntityCoords(entity)) < 1.9 and HasAccess() or
+					HasAccess()
 			end,
 			onSelect = function(data)
 				Citizen.CreateThreadNow(function()
@@ -90,20 +92,20 @@ Targets = function()
 						disable = {
 							car = true,
 						},
-					}) 
+					})
 					CheckVehicle(HasAccess())
 				end)
 			end
 		}
 	}
 	if target ~= 'ox_target' then
-		for k,v in pairs(options) do
+		for k, v in pairs(options) do
 			if v.onSelect then
 				v.action = v.onSelect
 				v.onSelect = nil
 			end
 		end
-		exports[target]:AddGlobalVehicle({options = options, distance = 4})
+		exports[target]:AddGlobalVehicle({ options = options, distance = 4 })
 	else
 		exports[target]:addGlobalVehicle(options)
 	end
@@ -111,29 +113,29 @@ Targets = function()
 	-- CRAFTING
 
 	Crafting = function()
-		for k,v in pairs(config.crafting) do
+		for k, v in pairs(config.crafting) do
 			local targetoptions = {
 				{
-					name = k..'_boxzone',
+					name = k .. '_boxzone',
 					onSelect = function()
 						local options = {}
-						for k2,v in pairs(v.categories) do
-							table.insert(options,{
+						for k2, v in pairs(v.categories) do
+							table.insert(options, {
 								title = v.label,
 								--icon = k == 'engine' and 'nui://ox_inventory/web/images/engine.png' or 'nui://ox_inventory/web/images/'..v.name..'.png',
-								description = 'Craft '..v.label,
+								description = 'Craft ' .. v.label,
 								arrow = true,
 								onSelect = function()
-									CraftOption(v.items,k,v.label)
+									CraftOption(v.items, k, v.label)
 								end,
 							})
 						end
 						lib.registerContext({
-							id = k..'_menu',
+							id = k .. '_menu',
 							title = v.label,
 							options = options
 						})
-						lib.showContext(k..'_menu')
+						lib.showContext(k .. '_menu')
 					end,
 					icon = 'fa-solid fa-cube',
 					label = v.label,
@@ -142,7 +144,7 @@ Targets = function()
 					end
 				}
 			}
-			for k,v in pairs(targetoptions) do
+			for k, v in pairs(targetoptions) do
 				if v.onSelect then
 					v.action = v.onSelect
 				end
@@ -158,25 +160,27 @@ Targets = function()
 				exports[target]:addBoxZone(options)
 			else
 				local coord = GetEntityCoords(cache.ped)
-				exports[target]:AddBoxZone(k..'_boxzone',options.coords,0.40,0.40,{name = k..'_boxzone',
-				debugPoly = true,
-				minZ = options.coords.z-0.2,
-				maxZ = options.coords.z+0.2,},options)
+				exports[target]:AddBoxZone(k .. '_boxzone', options.coords, 0.40, 0.40, {
+					name = k .. '_boxzone',
+					debugPoly = true,
+					minZ = options.coords.z - 0.2,
+					maxZ = options.coords.z + 0.2,
+				}, options)
 			end
 		end
 	end
 
 	EngineSwaps = function()
 		lib.requestModel(config.engineswapper.model)
-		for k,v in pairs(config.engineswapper.coords) do
-			for k,v2 in pairs(GetGamePool('CPed')) do
-				if #(GetEntityCoords(v2) - vec3(v.x,v.y,v.z)) < 3 then
+		for k, v in pairs(config.engineswapper.coords) do
+			for k, v2 in pairs(GetGamePool('CPed')) do
+				if #(GetEntityCoords(v2) - vec3(v.x, v.y, v.z)) < 3 then
 					DeleteEntity(v2)
 				end
 			end
-			engineswapper = CreateObjectNoOffset(config.engineswapper.model,v.x,v.y,v.z-0.98,false,true)
+			engineswapper = CreateObjectNoOffset(config.engineswapper.model, v.x, v.y, v.z - 0.98, false, true)
 			while not DoesEntityExist(engineswapper) do Wait(1) end
-			SetEntityHeading(engineswapper,v.w-180)
+			SetEntityHeading(engineswapper, v.w - 180)
 			FreezeEntityPosition(engineswapper)
 
 			local options = {
@@ -193,7 +197,7 @@ Targets = function()
 									arrow = true,
 									onSelect = function(data)
 										local vehicle = GetClosestVehicle(GetEntityCoords(engineswapper), 4.0)
-										ContextMenuOptions('engine_storage:'..k,engineswapper,vehicle)
+										ContextMenuOptions('engine_storage:' .. k, engineswapper, vehicle)
 									end
 								},
 								{
@@ -201,7 +205,21 @@ Targets = function()
 									description = 'Store a engine',
 									arrow = true,
 									onSelect = function()
-										TriggerEvent('ox_inventory:openInventory', 'stash', {id = 'engine_storage:'..k, name = 'Engine Storage', slots = 70, weight = 1000000, coords = GetEntityCoords(cache.ped)})
+										TriggerServerEvent("inventory:server:OpenInventory", "stash",
+											'engine_storage:' .. k, {
+												maxweight = 70,
+												weight = 1000000,
+											})
+
+										TriggerEvent('ox_inventory:openInventory', 'stash',
+											{
+												id = 'engine_storage:' .. k,
+												name = 'Engine Storage',
+												slots = 70,
+												weight = 1000000,
+												coords =
+													GetEntityCoords(cache.ped)
+											})
 									end
 								},
 							}
@@ -216,17 +234,16 @@ Targets = function()
 				}
 			}
 			if target == 'ox_target' then
-				exports[target]:addLocalEntity({engineswapper}, options)
+				exports[target]:addLocalEntity({ engineswapper }, options)
 			else
-				for k,v in pairs(options) do
+				for k, v in pairs(options) do
 					if v.onSelect then
 						v.action = v.onSelect
 						v.onSelect = nil
 					end
 				end
-				exports[target]:AddTargetEntity(engineswapper, {options = options, distance = 4})
+				exports[target]:AddTargetEntity(engineswapper, { options = options, distance = 4 })
 			end
-			
 		end
 	end
 	Citizen.CreateThread(EngineSwaps)
